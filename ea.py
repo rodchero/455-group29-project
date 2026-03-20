@@ -1,31 +1,29 @@
+from individual import Individual
 
 '''Class which implements the evolutionary algorithm for optimizing city layouts.'''
 class EA:
+
+        
     '''Constructor for the EA class, initializing parameters and internal state.'''
-    def __init__(self, population_size, max_generations, mutation_rate):
+    def __init__(self, population_size, max_generations, mutation_rate, schema, city):
         # parameters for the evolutionary algorithm
         self.population_size = population_size
         self.max_generations = max_generations
         self.mutation_rate = mutation_rate
+        self.city = city
 
         # internal state of the algorithm
         self.population = []
-        self.__initialize_population()
+        self.__initialize_population(schema) 
 
     '''
     Private method to initialize the population.
     This method generates an initial population of individuals randomly.
     '''
-    def __initialize_population(self):
-        #TODO
+    def __initialize_population(self, schema):
+        for _ in range(self.population_size):
+            self.population.append(Individual(schema, self.city))
         return
-    
-    '''
-    Private method to evaluate the fitness of an individual.
-    '''
-    def __fitness_evaluation(self, individual):
-        #TODO
-        return 
     
     '''
     Private method for parent selection, which selects individuals based on their fitness.
