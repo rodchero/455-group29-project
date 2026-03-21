@@ -15,7 +15,6 @@ class City:
             # TODO: This should really be perlin noise (instead of white noise) for more realistic-looking population densities
             row = [rng.randint(self.min_population, self.max_population) for _ in range(grid_size[0])]
             self.population_distribution.append(row)
-        
         return
 
 

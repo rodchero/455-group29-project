@@ -2,35 +2,56 @@ from individual import Individual
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
+import random
+import math
 from PIL import Image
 
-'''Class which implements the evolutionary algorithm for optimizing city layouts.'''
+DISPLAY_EVERY_N_GENERATIONS = 10
+
 class EA:
+    '''Class which implements the evolutionary algorithm for optimizing city layouts.'''
 
         
-    '''Constructor for the EA class, initializing parameters and internal state.'''
     def __init__(self, population_size, max_generations, mutation_rate, schema, city):
+        '''Constructor for the EA class, initializing parameters and internal state.'''
         # parameters for the evolutionary algorithm
         self.population_size = population_size
         self.max_generations = max_generations
         self.mutation_rate = mutation_rate
         self.city = city
+        self.parent_pool_size = math.ceil(population_size * 0.25)
+        self.num_offspring = population_size
 
         # internal state of the algorithm
         self.population = []
         self.__initialize_population(schema)
 
-    def visualize_population(self, num_individuals=1):
+    def initialize_plots(self, num_individuals=9):
+        '''
+        Public method which initializes the pyplot plots which will display the city visualization.
+        '''
+        num_rows = int(math.sqrt(num_individuals))
+        num_cols = math.ceil((num_individuals / num_rows))
+        _, axs = plt.subplots(num_rows, num_cols)
+        return axs
+
+
+    def visualize_population(self, axs, num_individuals=9):
         '''
         Public method for visualizing the best n individuals in the EA, in order to monitor progress.
         '''
         # First, validate input
         if num_individuals > self.population_size:
             num_individuals = self.population_size
-        # Then display a plot for each of the n individuals
-        for individual in self.population[:num_individuals]: # assumes population is sorted
-            plt.imshow(self.city.population_distribution, cmap="gray_r") # displays the city population density as a background
-            for i, service in enumerate(individual.offsets):
+        # Then sort the population by fitness
+        self.population.sort(key=(lambda individual: individual.fitness_evaluation()), reverse=True)
+        # Then display a plot for each of the best n individuals
+        for individual_index, individual in enumerate(self.population[:num_individuals]):
+            ax = axs.flat[individual_index]
+            ax.cla()
+            ax.set_title(f"Fitness: {individual.fitness_evaluation():.2f}")
+            ax.imshow(self.city.population_distribution, cmap="gray_r") # displays the city population density as a background
+            for service_index, service in enumerate(individual.offsets):
                 # Displays a circle at each service's location
                 for service_location in individual.get_services_of_type(service):
                     # Sets up the circle image
@@ -38,7 +59,7 @@ class EA:
                     circle_img_array = np.asarray(circle_img).copy()
                     
                     # Recolours the circle image
-                    service_color = mpl.colormaps['tab10'].colors[i]
+                    service_color = mpl.colormaps['tab10'].colors[service_index]
                     for channel in range(3):
                         circle_img_array[:, :, channel] = service_color[channel] * 255
                     circle_img = Image.fromarray(circle_img_array, "RGBA")
@@ -48,60 +69,68 @@ class EA:
                     y_start = service_location[1] - 0.4
                     y_end = service_location[1] + 0.4
                         
-                    plt.imshow(circle_img, extent=(x_start, x_end, y_start, y_end), aspect="equal", origin="lower") # Overlays the circle on the image
-            plt.imshow([[]], extent=(-0.5, 9.5, 9.5, -0.5)) # Changes the extent to the entire image
-            plt.show()
+                    ax.imshow(circle_img, extent=(x_start, x_end, y_start, y_end), aspect="equal", origin="lower") # Overlays the circle on the image
+            ax.imshow([[]], extent=(-0.5, 9.5, 9.5, -0.5)) # Changes the extent to the entire image
+        plt.show(block=False)
+        plt.pause(0.1)
 
-            
-
-    '''
-    Private method to initialize the population.
-    This method generates an initial population of individuals randomly.
-    '''
     def __initialize_population(self, schema):
+        '''
+        Private method to initialize the population.
+        This method generates an initial population of individuals randomly.
+        '''
         for _ in range(self.population_size):
             self.population.append(Individual(schema, self.city))
-        return
     
-    '''
-    Private method for parent selection, which selects individuals based on their fitness.
-    Uses the "tournament selection" strategy, where a subset of individuals is randomly chosen and the best among them is selected as a parent.
-    '''
     def __parent_selection(self):
-        #TODO
-        return
+        '''
+        Private method for parent selection, which selects individuals based on their fitness.
+        Uses the "tournament selection" strategy, where a subset of individuals is randomly chosen and the best among them is selected as a parent.
+        '''
+        random.shuffle(self.population)
+        parent_pool = self.population[:self.parent_pool_size] # gets a random subset of the population
+        parent_pool.sort(key=(lambda individual: individual.fitness_evaluation()), reverse=True) # sorts the subset by fitness
+        return parent_pool[0]
 
-    '''
-    Private method for survivor selection, which determines which individuals survive to the next generation.
-    Uses the "mu + lambda" selection strategy, where both parents and offspring compete for survival.
-    '''
-    def __survivor_selection(self, pop):
-        #TODO
-        return
+    def __survivor_selection(self, offspring):
+        '''
+        Private method for survivor selection, which determines which individuals survive to the next generation.
+        Uses the "mu + lambda" selection strategy, where both parents and offspring compete for survival.
+        '''
+        # Combines the existing population and offspring together into one population
+        mu = len(self.population)
+        combined_population = self.population + offspring
+        # Returns a random subset of the combined population with size equal to the size of the original population
+        random.shuffle(combined_population)
+        return combined_population[:mu] 
 
-    '''
-    Private method for mutation, which introduces random changes to an individual's genes based on the mutation rate.
-    Uses the "random increment" strategy, where a random value is added to one of the gene's coordinates.
-    '''
-    def __mutate(self, individual):
-        #TODO        
-        return
-
-    '''
-    Private method for recombination, which combines the genes of two parent individuals to create offspring.
-    Uses a version of the "cut and crossfill" strategy.
-    '''
     def __recombine(self, parent1, parent2):
+        '''
+        Private method for recombination, which combines the genes of two parent individuals to create offspring.
+        Uses a version of the "cut and crossfill" strategy.
+        '''
         #TODO
-        return
+        return parent1
     
-    '''
-    Public method to run the evolutionary algorithm, which iteratively evolves the population over a specified number of generations.
-    The "hard part" of this assignment.
-    '''
     def run(self):
-        #TODO
-        return
-        
-    
+        '''
+        Public method to run the evolutionary algorithm, which iteratively evolves the population over a specified number of generations.
+        The "hard part" of this assignment.
+        '''
+        # The population is already initialized in the constructor.
 
+        axs = self.initialize_plots(2)
+
+        for generation in range(self.max_generations):
+            offspring = []
+            for _ in range(self.num_offspring):
+                parent1 = self.__parent_selection()
+                parent2 = self.__parent_selection()
+                child = self.__recombine(parent1, parent2)
+                if random.random() < self.mutation_rate:
+                    child.mutate()
+                offspring.append(child)
+            self.population = self.__survivor_selection(offspring)
+            if generation % DISPLAY_EVERY_N_GENERATIONS == 0:
+                print(f"GENERATION {generation}")
+                self.visualize_population(axs, 2)

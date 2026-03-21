@@ -19,12 +19,24 @@ def main():
         'emergency': 2,
     }
     
-    ea = EA(POP_SIZE, NUM_GENERATIONS, MUTATION_RATE, urban_blueprint, City(seed=42))
+    print("INITIALIZING...")
+    city = City(seed=42)
+    ea = EA(POP_SIZE, NUM_GENERATIONS, MUTATION_RATE, urban_blueprint, city)
 
-    print("Initial Population:")
-    print(ea.population)
+    ea.population[0].genes = [
+        (0,1),
+        (1,0),
+        (1,1)
+    ]
 
-    ea.visualize_population(2)
+    ea.population[1].genes = [
+        (2,1),
+        (2,0),
+        (2,2)
+    ]
+
+    print("STARTING EVOLUTION...")
+    ea.run()
     
 
 if __name__ == "__main__":
