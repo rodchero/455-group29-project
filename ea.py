@@ -1,4 +1,8 @@
 from individual import Individual
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import numpy as np
+from PIL import Image
 
 '''Class which implements the evolutionary algorithm for optimizing city layouts.'''
 class EA:
@@ -14,7 +18,41 @@ class EA:
 
         # internal state of the algorithm
         self.population = []
-        self.__initialize_population(schema) 
+        self.__initialize_population(schema)
+
+    def visualize_population(self, num_individuals=1):
+        '''
+        Public method for visualizing the best n individuals in the EA, in order to monitor progress.
+        '''
+        # First, validate input
+        if num_individuals > self.population_size:
+            num_individuals = self.population_size
+        # Then display a plot for each of the n individuals
+        for individual in self.population[:num_individuals]: # assumes population is sorted
+            plt.imshow(self.city.population_distribution, cmap="gray_r") # displays the city population density as a background
+            for i, service in enumerate(individual.offsets):
+                # Displays a circle at each service's location
+                for service_location in individual.get_services_of_type(service):
+                    # Sets up the circle image
+                    circle_img = Image.open("images/circle.png").convert("RGBA")
+                    circle_img_array = np.asarray(circle_img).copy()
+                    
+                    # Recolours the circle image
+                    service_color = mpl.colormaps['tab10'].colors[i]
+                    for channel in range(3):
+                        circle_img_array[:, :, channel] = service_color[channel] * 255
+                    circle_img = Image.fromarray(circle_img_array, "RGBA")
+
+                    x_start = service_location[0] - 0.4
+                    x_end = service_location[0] + 0.4
+                    y_start = service_location[1] - 0.4
+                    y_end = service_location[1] + 0.4
+                        
+                    plt.imshow(circle_img, extent=(x_start, x_end, y_start, y_end), aspect="equal", origin="lower") # Overlays the circle on the image
+            plt.imshow([[]], extent=(-0.5, 9.5, 9.5, -0.5)) # Changes the extent to the entire image
+            plt.show()
+
+            
 
     '''
     Private method to initialize the population.

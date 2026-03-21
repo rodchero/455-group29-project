@@ -21,8 +21,6 @@ def main():
     
     ea = EA(POP_SIZE, NUM_GENERATIONS, MUTATION_RATE, urban_blueprint, City(seed=42))
 
-    print(City(seed=42))
-
     print("Initial Population:")
     print(ea.population)
 
