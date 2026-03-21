@@ -4,9 +4,11 @@ import matplotlib as mpl
 import numpy as np
 import random
 import math
+import copy
 from PIL import Image
 
 DISPLAY_EVERY_N_GENERATIONS = 10
+NUM_INDIVIDUALS_TO_DISPLAY = 9
 
 class EA:
     '''Class which implements the evolutionary algorithm for optimizing city layouts.'''
@@ -19,8 +21,8 @@ class EA:
         self.max_generations = max_generations
         self.mutation_rate = mutation_rate
         self.city = city
-        self.parent_pool_size = math.ceil(population_size * 0.25)
-        self.num_offspring = population_size
+        self.parent_pool_size = 4
+        self.num_offspring = 1
 
         # internal state of the algorithm
         self.population = []
@@ -36,7 +38,7 @@ class EA:
         return axs
 
 
-    def visualize_population(self, axs, num_individuals=9):
+    def visualize_population(self, axs, num_individuals=9, pause_execution=False):
         '''
         Public method for visualizing the best n individuals in the EA, in order to monitor progress.
         '''
@@ -49,9 +51,10 @@ class EA:
         for individual_index, individual in enumerate(self.population[:num_individuals]):
             ax = axs.flat[individual_index]
             ax.cla()
+            ax.set_axis_off()
             ax.set_title(f"Fitness: {individual.fitness_evaluation():.2f}")
             ax.imshow(self.city.population_distribution, cmap="gray_r") # displays the city population density as a background
-            for service_index, service in enumerate(individual.offsets):
+            for service_index, service in enumerate(individual.schema):
                 # Displays a circle at each service's location
                 for service_location in individual.get_services_of_type(service):
                     # Sets up the circle image
@@ -70,9 +73,9 @@ class EA:
                     y_end = service_location[1] + 0.4
                         
                     ax.imshow(circle_img, extent=(x_start, x_end, y_start, y_end), aspect="equal", origin="lower") # Overlays the circle on the image
-            ax.imshow([[]], extent=(-0.5, 9.5, 9.5, -0.5)) # Changes the extent to the entire image
-        plt.show(block=False)
-        plt.pause(0.1)
+            ax.imshow([[]], extent=(-0.5, self.city.grid_size[0] - 0.5, self.city.grid_size[1] - 0.5, -0.5)) # Resets the extent to the entire image
+        plt.show(block=pause_execution)
+        plt.pause(0.01)
 
     def __initialize_population(self, schema):
         '''
@@ -109,8 +112,18 @@ class EA:
         Private method for recombination, which combines the genes of two parent individuals to create offspring.
         Uses a version of the "cut and crossfill" strategy.
         '''
-        #TODO
-        return parent1
+        child = Individual(parent1.schema, parent1.city)
+
+        start_index = random.randint(0, len(parent1.genes) - 1)
+        end_index = random.randint(0, len(parent1.genes) - 1)
+
+        if start_index > end_index:
+            start_index, end_index = end_index, start_index
+        
+        child.genes = copy.copy(parent1.genes)
+        child.genes[start_index:end_index] = parent2.genes[start_index:end_index]
+
+        return child
     
     def run(self):
         '''
@@ -119,9 +132,9 @@ class EA:
         '''
         # The population is already initialized in the constructor.
 
-        axs = self.initialize_plots(2)
+        axs = self.initialize_plots(NUM_INDIVIDUALS_TO_DISPLAY)
 
-        for generation in range(self.max_generations):
+        for generation in range(self.max_generations + 1):
             offspring = []
             for _ in range(self.num_offspring):
                 parent1 = self.__parent_selection()
@@ -133,4 +146,4 @@ class EA:
             self.population = self.__survivor_selection(offspring)
             if generation % DISPLAY_EVERY_N_GENERATIONS == 0:
                 print(f"GENERATION {generation}")
-                self.visualize_population(axs, 2)
+                self.visualize_population(axs, NUM_INDIVIDUALS_TO_DISPLAY, pause_execution=(generation == self.max_generations))

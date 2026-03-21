@@ -1,10 +1,13 @@
 import random
 import math
 
+MUTATION_STRATEGY = 0
+
 class Individual:
     '''Class which represents an individual in the population, encoding the locations of different building categories in a city layout.'''
     def __init__(self, schema, city):
         self.genes = []
+        self.schema = schema
         self.offsets = {}
         self.city = city
         
@@ -40,7 +43,7 @@ class Individual:
         for row in range(self.city.grid_size[1]):
             for col in range(self.city.grid_size[0]):
                 # Then, loop over every different kind of service
-                for service in self.offsets:
+                for service in self.schema:
                     # Find the minimum distance by iterating over every service of this type
                     min_distance_to_service = float("inf")
                     service_locations = self.get_services_of_type(service)
@@ -57,14 +60,21 @@ class Individual:
         Public method for mutation, which introduces random changes to the individual's genes based on the mutation rate.
         Uses the "random increment" strategy, where a random value is added to one of the gene's coordinates.
         '''
-        # The index at which the mutation is happening
-        index = random.randint(0, len(self.genes) - 1)
-        # Create a copy of the gene at that index and increases/decreases one of its coordinates by 1
-        gene = self.genes[index]
-        new_gene = list(gene)
-        amount_to_add = (random.randint(0,1) * 2 - 1) # Either -1 or 1, never 0
-        coordinate_index = random.randint(0,1) # If 0, we are changing the x coordinate. If 1, we are changing the y coordinate
-        # New gene coordinate is clamped to ensure it stays on the city grid
-        new_gene[coordinate_index] = max(min(new_gene[coordinate_index] + amount_to_add, self.city.grid_size[coordinate_index] - 1), 0)
-        # Finally, replace the old gene with the new one
-        self.genes[index] = tuple(new_gene)
+        if MUTATION_STRATEGY == 0:
+            # The index at which the mutation is happening
+            index = random.randint(0, len(self.genes) - 1)
+            # Create a copy of the gene at that index and increases/decreases one of its coordinates by 1
+            gene = self.genes[index]
+            new_gene = list(gene)
+            amount_to_add = random.randint(-5, 5)
+            coordinate_index = random.randint(0,1) # If 0, we are changing the x coordinate. If 1, we are changing the y coordinate
+            # New gene coordinate is clamped to ensure it stays on the city grid
+            new_gene[coordinate_index] = max(min(new_gene[coordinate_index] + amount_to_add, self.city.grid_size[coordinate_index] - 1), 0)
+            # Finally, replace the old gene with the new one
+            self.genes[index] = tuple(new_gene)
+        else:
+            # The index at which the mutation is happening
+            index = random.randint(0, len(self.genes) - 1)
+            new_gene = (random.randint(0, self.city.grid_size[0] - 1), random.randint(0, self.city.grid_size[1] - 1))
+            self.genes[index] = new_gene
+
