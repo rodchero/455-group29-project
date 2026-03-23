@@ -24,12 +24,12 @@ class City:
     # deprecated
     def __repr__(self):
         res=""
-        res+= "===="*self.grid_size[0] + "=\n"
+        res+= "========"*self.grid_size[0] + "=\n"
         for row in self.population_distribution:
             for cell in row:
-                res+=f"|{cell:3}"
-            res+= "|\n" + "----"*self.grid_size[0] + "-\n" 
-        res+= "===="*self.grid_size[0] + "=\n" 
+                res+=f"|{cell:3.{2}}\t"
+            res+= "|\n" + "--------"*self.grid_size[0] + "-\n" 
+        res+= "========"*self.grid_size[0] + "=\n" 
         return res
     
 
