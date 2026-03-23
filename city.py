@@ -1,4 +1,5 @@
 import random as rng
+from perlin_noise import PerlinNoise
 
 '''Class which represents the city as a grid with population distribution.'''
 class City:
@@ -9,15 +10,18 @@ class City:
         self.max_population = population_range[1]
 
         # to allow for reproducibility 
-        rng.seed(seed)
+        noise = PerlinNoise(octaves=2, seed=seed)
 
-        for _ in range(grid_size[1]):
-            row = [rng.randint(self.min_population, self.max_population) for _ in range(grid_size[0])]
+        for x in range(grid_size[1]):
+            row = []
+            for y in range(grid_size[0]):
+                population_density = self.min_population + noise.noise([x / grid_size[1], y / grid_size[0]]) * (self.max_population - self.min_population)
+                row.append(population_density)
             self.population_distribution.append(row)
-        
         return
 
 
+    # deprecated
     def __repr__(self):
         res=""
         res+= "===="*self.grid_size[0] + "=\n"
