@@ -2,16 +2,16 @@ from city import *
 from individual import *
 from ea import *
 
-POP_SIZE = 20
-NUM_GENERATIONS = 400
+POP_SIZE = 30
+NUM_GENERATIONS = 1000
 MUTATION_RATE = 0.5
 
 def main():
 
     urban_blueprint = {
-        'school': 8,
-        'emergency': 3,
-        'grocery': 2
+        'school': 11,
+        'emergency': 6,
+        'grocery': 5
     }
 
     # urban_blueprint = {
@@ -20,7 +20,7 @@ def main():
     # }
     
     print("INITIALIZING...")
-    city = City((20, 20), seed=45)
+    city = City((50, 50), seed=49)
     ea = EA(POP_SIZE, NUM_GENERATIONS, MUTATION_RATE, urban_blueprint, city)
 
     print("STARTING EVOLUTION...")

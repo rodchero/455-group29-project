@@ -38,4 +38,4 @@ class City:
 
 if __name__ == "__main__":
     print("Example city with seed=42")
-    print(City(grid_size=(10, 10), seed=42))
+    print(City(grid_size=(50, 50), seed=46))
