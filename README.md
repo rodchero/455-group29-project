@@ -1,6 +1,6 @@
-### CISC 455 Group 29
+# CISC 455 Group 29
 
-# Group Members
+### Group Members
 - James Kivenko
 - Luca Spermezan
 - Roman Rodchenkov
