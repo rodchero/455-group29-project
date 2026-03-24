@@ -3,7 +3,7 @@ from individual import *
 from ea import *
 
 POP_SIZE = 20
-NUM_GENERATIONS = 10000
+NUM_GENERATIONS = 200
 MUTATION_RATE = 0.5
 
 def main():
@@ -25,6 +25,7 @@ def main():
 
     print("STARTING EVOLUTION...")
     ea.run()
+    ea.plot_convergence() 
     
 
 if __name__ == "__main__":

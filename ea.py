@@ -30,6 +30,9 @@ class EA:
         self.population = []
         self.__initialize_population(schema)
 
+        # for plotting best individual over generations
+        self.best_fitnesses = []
+
     def initialize_plots(self, num_individuals=9):
         '''
         Public method which initializes the pyplot plots which will display the city visualization.
@@ -186,7 +189,7 @@ class EA:
 
         axs = self.initialize_plots(NUM_INDIVIDUALS_TO_DISPLAY)
 
-        for generation in range(self.max_generations + 1):
+        for generation in range(self.max_generations):
             offspring = []
             for _ in range(self.num_offspring):
                 parent1 = self.__parent_selection()
@@ -196,6 +199,26 @@ class EA:
                     child.mutate()
                 offspring.append(child)
             self.population = self.__survivor_selection(offspring)
+            # display every n generations 
             if generation % DISPLAY_EVERY_N_GENERATIONS == 0:
                 print(f"GENERATION {generation}")
                 self.visualize_population(axs, NUM_INDIVIDUALS_TO_DISPLAY, pause_execution=(generation == self.max_generations))
+            # save best individual of every generation to plot later
+            fitness_scores = self.__get_fitnesses(self.population)
+            best_fitness = max(fitness_scores.values())
+            self.best_fitnesses.append(best_fitness)
+
+    def plot_convergence(self):
+        '''
+        Plots best individual over generations (to help analyze learning/convergence).
+        '''
+        plt.figure(figsize = (10, 5))
+        plt.xlabel("Generation")
+        plt.ylabel("Fitness")
+        
+        # Plot the list and provide a label for the legend
+        plt.plot(self.best_fitnesses, label="Best Fitness", color="blue")
+        
+        plt.title("Best Fitness over Generations")
+        plt.legend()
+        plt.show()
