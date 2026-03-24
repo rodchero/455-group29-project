@@ -9,18 +9,18 @@ MUTATION_RATE = 0.5
 def main():
 
     urban_blueprint = {
-        'school': 2,
+        'school': 8,
         'emergency': 3,
-        'grocery': 4
+        'grocery': 2
     }
 
     # urban_blueprint = {
-    #     'school': 1,
-    #     'emergency': 2,
+    #     'school': 2,
+    #     'emergency': 1,
     # }
     
     print("INITIALIZING...")
-    city = City((50, 50), seed=42)
+    city = City((20, 20), seed=45)
     ea = EA(POP_SIZE, NUM_GENERATIONS, MUTATION_RATE, urban_blueprint, city)
 
     print("STARTING EVOLUTION...")

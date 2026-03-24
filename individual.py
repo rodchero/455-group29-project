@@ -2,6 +2,7 @@ import random
 import math
 
 MUTATION_STRATEGY = 0
+DISTANCE_RADIUS_SIGMA = 1.0
 
 class Individual:
     '''Class which represents an individual in the population, encoding the locations of different building categories in a city layout.'''
@@ -52,7 +53,7 @@ class Individual:
                         distance_to_location = math.sqrt((service_location[0] - col) ** 2 +(service_location[1] - row) ** 2) # euclidean distance
                         min_distance_to_service = min(min_distance_to_service, distance_to_location)
                     # The minimum distance is multiplied by the population density at this location in order to favour more densely populated areas
-                    fitness -= min_distance_to_service * self.city.population_distribution[row][col]
+                    fitness += math.exp(-(min_distance_to_service ** 2) / (DISTANCE_RADIUS_SIGMA ** 2)) * self.city.population_distribution[row][col]
         return fitness
     
     def mutate(self):

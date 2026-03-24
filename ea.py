@@ -7,8 +7,9 @@ import math
 import copy
 from PIL import Image
 
-DISPLAY_EVERY_N_GENERATIONS = 10
+DISPLAY_EVERY_N_GENERATIONS = 100
 NUM_INDIVIDUALS_TO_DISPLAY = 9
+FIT_SHARING_SIGMA = 2.0
 
 class EA:
     '''Class which implements the evolutionary algorithm for optimizing city layouts.'''
@@ -21,8 +22,8 @@ class EA:
         self.max_generations = max_generations
         self.mutation_rate = mutation_rate
         self.city = city
-        self.parent_pool_size = 4
-        self.num_offspring = 1
+        self.parent_pool_size = math.ceil(population_size / 4.0) + 1
+        self.num_offspring = math.ceil(population_size / 8.0)
 
         # internal state of the algorithm
         self.population = []
@@ -46,13 +47,14 @@ class EA:
         if num_individuals > self.population_size:
             num_individuals = self.population_size
         # Then sort the population by fitness
-        self.population.sort(key=(lambda individual: individual.fitness_evaluation()), reverse=True)
+        fitness_scores = self.__get_fitnesses(self.population)
+        self.population.sort(key=(lambda individual: fitness_scores[individual]), reverse=True)
         # Then display a plot for each of the best n individuals
         for individual_index, individual in enumerate(self.population[:num_individuals]):
             ax = axs.flat[individual_index]
             ax.cla()
             ax.set_axis_off()
-            ax.set_title(f"Fitness: {individual.fitness_evaluation():.2f}")
+            ax.set_title(f"Fitness: {fitness_scores[individual]:.2f}")
             ax.imshow(self.city.population_distribution, cmap="gray_r") # displays the city population density as a background
             for service_index, service in enumerate(individual.schema):
                 # Displays a circle at each service's location
@@ -85,6 +87,36 @@ class EA:
         for _ in range(self.population_size):
             self.population.append(Individual(schema, self.city))
     
+    def __get_fitnesses(self, pool):
+        '''
+        Private method which sorts the given population pool in-place, taking into account a solution's:
+            * True fitness: the distance from each city square to the nearest of each type of service, weighted by the population density of that square.
+            * Fitness sharing: a solution is penalized for being similar to other solutions
+        Returns an dictionary where keys are individuals and values are their fitnesses calculated as a combination of true fitness and fitness sharing.
+        '''
+        fitness_values = {}
+
+        for individual in pool:
+            true_fitness = individual.fitness_evaluation()
+            fitness_sharing_amount = 0.0
+            # Does a naive fitness sharing calculation. Note that this operates on the genotype, not the phenotype. Genotypically, two services of the same type 
+            # are completely different, whereas phenotypically they are undistinguishable (since a city only cares that a school is nearby, not which one).
+            # This phenotypical understanding is what is used during fitness evaluation, but it is acceptable to use the genotypical understanding
+            # for this naive fitness sharing calculation since the goal is just to curb the size of a species.
+            for other in pool:
+                genotype_distance = 0.0
+                for i, gene in enumerate(individual.genes):
+                    other_gene = other.genes[i]
+                    genotype_distance += (gene[0] - other_gene[0]) ** 2 + (gene[1] - other_gene[1]) ** 2
+                genotype_distance = math.sqrt(genotype_distance)
+                if genotype_distance <= FIT_SHARING_SIGMA:
+                    fitness_sharing_amount += 1.0 - (genotype_distance / FIT_SHARING_SIGMA)
+            fitness_values[individual] = true_fitness / fitness_sharing_amount
+
+        return fitness_values
+
+
+
     def __parent_selection(self):
         '''
         Private method for parent selection, which selects individuals based on their fitness.
@@ -92,8 +124,13 @@ class EA:
         '''
         random.shuffle(self.population)
         parent_pool = self.population[:self.parent_pool_size] # gets a random subset of the population
-        parent_pool.sort(key=(lambda individual: individual.fitness_evaluation()), reverse=True) # sorts the subset by fitness
-        return parent_pool[0]
+        fitness_scores = self.__get_fitnesses(parent_pool)
+        # Then, return the best individual by iterating over all individuals in the dictionary
+        best_individual = list(fitness_scores.keys())[0]
+        for individual in fitness_scores:
+            if fitness_scores[individual] > fitness_scores[best_individual]:
+                best_individual = individual
+        return best_individual
 
     def __survivor_selection(self, offspring):
         '''

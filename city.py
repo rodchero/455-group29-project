@@ -15,7 +15,10 @@ class City:
         for x in range(grid_size[1]):
             row = []
             for y in range(grid_size[0]):
-                population_density = self.min_population + noise.noise([x / grid_size[1], y / grid_size[0]]) * (self.max_population - self.min_population)
+                # Get a perlin noise value for this coordinate
+                population_density = noise.noise([x / grid_size[1], y / grid_size[0]])
+                # Then normalize to be between min_population and max_population
+                population_density = self.min_population + ((population_density + 1.0) / 2.0) * (self.max_population - self.min_population)
                 row.append(population_density)
             self.population_distribution.append(row)
         return
