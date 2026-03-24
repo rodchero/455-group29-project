@@ -32,6 +32,8 @@ class EA:
 
         # for plotting best individual over generations
         self.best_fitnesses = []
+        self.median_fitnesses = []
+        self.worst_fitnesses = []
 
     def initialize_plots(self, num_individuals=9):
         '''
@@ -203,22 +205,29 @@ class EA:
             if generation % DISPLAY_EVERY_N_GENERATIONS == 0:
                 print(f"GENERATION {generation}")
                 self.visualize_population(axs, NUM_INDIVIDUALS_TO_DISPLAY, pause_execution=(generation == self.max_generations))
-            # save best individual of every generation to plot later
+            
+            # extract all fitness values for the current generation
             fitness_scores = self.__get_fitnesses(self.population)
-            best_fitness = max(fitness_scores.values())
-            self.best_fitnesses.append(best_fitness)
+            fitness_values = list(fitness_scores.values())
+            
+            # calculate and save best, mean, and worst fitness to plot later
+            self.best_fitnesses.append(max(fitness_values))
+            self.median_fitnesses.append(fitness_values[len(fitness_values)//2])
+            self.worst_fitnesses.append(min(fitness_values))
 
     def plot_convergence(self):
         '''
-        Plots best individual over generations (to help analyze learning/convergence).
+        Plots best, median, and worst individual fitness over generations (to help analyze learning/convergence).
         '''
-        plt.figure(figsize = (10, 5))
+        plt.figure(figsize=(10, 5))
         plt.xlabel("Generation")
         plt.ylabel("Fitness")
         
-        # Plot the list and provide a label for the legend
+        # Plot each metric with a distinct color and label
         plt.plot(self.best_fitnesses, label="Best Fitness", color="blue")
+        plt.plot(self.median_fitnesses, label="Median Fitness", color="green")
+        plt.plot(self.worst_fitnesses, label="Worst Fitness", color="red")
         
-        plt.title("Best Fitness over Generations")
+        plt.title("Population Fitness over Generations")
         plt.legend()
         plt.show()

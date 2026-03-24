@@ -3,7 +3,7 @@ from individual import *
 from ea import *
 
 POP_SIZE = 20
-NUM_GENERATIONS = 200
+NUM_GENERATIONS = 400
 MUTATION_RATE = 0.5
 
 def main():
