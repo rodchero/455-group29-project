@@ -1,6 +1,7 @@
 from individual import Individual
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from matplotlib.patches import Patch
 import numpy as np
 import random
 import math
@@ -49,12 +50,21 @@ class EA:
         # Then sort the population by fitness
         fitness_scores = self.__get_fitnesses(self.population)
         self.population.sort(key=(lambda individual: fitness_scores[individual]), reverse=True)
+        
+        # add all the urban planning elements to the legend
+        legend_elements = [
+            Patch(facecolor=mpl.colormaps['tab10'].colors[i], label=name)
+            for i, name in enumerate(self.population[0].schema)
+        ]
+        fig = axs.flat[0].get_figure()
+        fig.legends.clear() # prevents plots from shrinking with every generation
+
         # Then display a plot for each of the best n individuals
         for individual_index, individual in enumerate(self.population[:num_individuals]):
             ax = axs.flat[individual_index]
             ax.cla()
             ax.set_axis_off()
-            ax.set_title(f"Fitness: {fitness_scores[individual]:.2f}")
+            ax.set_title(f"Fitness: {fitness_scores[individual]:.2f}", fontsize=8)
             ax.imshow(self.city.population_distribution, cmap="gray_r") # displays the city population density as a background
             for service_index, service in enumerate(individual.schema):
                 # Displays a circle at each service's location
@@ -76,6 +86,11 @@ class EA:
                         
                     ax.imshow(circle_img, extent=(x_start, x_end, y_start, y_end), aspect="equal", origin="lower") # Overlays the circle on the image
             ax.imshow([[]], extent=(-0.5, self.city.grid_size[0] - 0.5, self.city.grid_size[1] - 0.5, -0.5)) # Resets the extent to the entire image
+        
+        # add the legend
+        fig.legend(handles=legend_elements, loc='center right', bbox_to_anchor=(0.98, 0.5))
+        fig.subplots_adjust(right=0.75)
+
         plt.show(block=pause_execution)
         plt.pause(0.01)
 
